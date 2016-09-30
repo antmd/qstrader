@@ -1,9 +1,12 @@
 import unittest
 
+import os
+import pandas as pd
 from qstrader.price_parser import PriceParser
 from qstrader.price_handler.historic_csv_tick import HistoricCSVTickPriceHandler
 from qstrader.compat import queue
 from qstrader import settings
+from qstrader.price_handler.chunk import data_directory
 
 
 class TestPriceHandlerSimpleCase(unittest.TestCase):
@@ -186,6 +189,26 @@ class TestPriceHandlerSimpleCase(unittest.TestCase):
         # TODO WHAT TO DO HERE?.
         # self.assertEqual(PriceParser.display(bid, 5), None)
         # self.assertEqual(PriceParser.display(ask, 5), None)
+
+
+class TestPriceHandlerChunks(unittest.TestCase):
+    def test_directory(self):
+        data_source = "sample"
+        dir = data_directory(data_source, "bar", pd.to_datetime("2010-01-20"), "D")
+        expected = os.path.join(data_source, "bar", "D", "2010")
+        self.assertEqual(dir, expected)
+
+        dir = data_directory(data_source, "bar", pd.to_datetime("2010-01-20"), "5Min")
+        expected = os.path.join(data_source, "bar", "5T", "2010", "2010-01", "2010-01-20")
+        self.assertEqual(dir, expected)
+
+        dir = data_directory(data_source, "tick", pd.to_datetime("2010-01-20"))  # , chunk='D')
+        expected = os.path.join(data_source, "tick", "2010", "2010-01", "2010-01-20")
+        self.assertEqual(dir, expected)
+
+        dir = data_directory(data_source, "tick", pd.to_datetime("2010-01-20"), chunk='MS')
+        expected = os.path.join(data_source, "tick", "2010", "2010-01")
+        self.assertEqual(dir, expected)
 
 
 if __name__ == "__main__":
